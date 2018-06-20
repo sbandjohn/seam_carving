@@ -40,7 +40,7 @@ def dp_forward(E_l, E_u, E_r, border):
                 t = j - 1
 
             if value[i - 1][j] + E_u[i][j] < temp : 
-                temp = value[i - 1][j] + E_l[i][j]
+                temp = value[i - 1][j] + E_u[i][j]
                 t = j
 
             if j < rightmost and value[i - 1][j + 1] + E_r[i][j] < temp : 
