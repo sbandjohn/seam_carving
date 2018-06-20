@@ -96,8 +96,10 @@ def carve_vertical_once(img, energy, border = 1, forward = False):
     if forward == False : 
         energy = cut_by_seam(energy, seam)
     else : 
-        for i in range(3) : 
-            energy[i] = cut_by_seam(energy[i], seam)
+        sb = []
+        for i in range(3) :
+            sb.append(cut_by_seam(energy[i], seam))
+        energy = np.array(sb)
 
     return img, energy
 
