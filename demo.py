@@ -57,8 +57,8 @@ def try_energy_funciton(img, func, orientation, num, name):
     plt.subplot(223)
     plt.imshow(it)
 
-try_energy_funciton(img, scharr_energy.energy_map, 'vertical', cuts, 'scharr')
-try_energy_funciton(img, part1_energy.energy_map, 'vertical', cuts, 'part1')
+try_energy_funciton(img, part1_energy.combine, 'vertical', cuts, 'combine')
+try_energy_funciton(img, part1_energy.minus_entropy, 'vertical', cuts, 'minusH')
 
 
 plt.figure()
