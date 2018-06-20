@@ -4,9 +4,10 @@ from matplotlib import pyplot as plt
 import sc
 import network_energy
 import scharr_energy
+import part1_energy
 
 image_dir = "dolphin.jpg"
-cuts = 50
+cuts = 20
 
 # seam carve and show result
 img = io.imread(image_dir)
@@ -27,10 +28,11 @@ def try_energy_funciton(img, func, orientation, num, name):
 
     # show first k seams
     em = func(img)
-    seams = sc.first_k_seams(img, em, orientation, k = 20, border=2)
+    seams = sc.first_k_seams(img, em, orientation, k = 30, border=2)
 
     plt.figure()
-    plt.title("seams by "+name)
+    plt.title(name)
+    plt.subplot(221)
     plt.imshow(img)
     for seam in seams:
         draw_seam(seam)
@@ -39,12 +41,11 @@ def try_energy_funciton(img, func, orientation, num, name):
     # carve once: cut 'num' seams by one energy map
     once = sc.carve(img, em, orientation, num=num, border=2)
 
-    plt.figure()
-    plt.title("once by"+name)
+    plt.subplot(222)
     plt.imshow(once)
 
     # iteratively calculate energy map and cut 'percuts' seams each time
-    times = 10
+    times = 5
     percuts = num//times
     em = func(img)
     it = img
@@ -52,12 +53,12 @@ def try_energy_funciton(img, func, orientation, num, name):
         print("iter:", i, " {}/{}".format(i*percuts, num))
         em = func(it)
         it = sc.carve(it, em, orientation, num=percuts, border=2)
-    plt.figure()
-    plt.title("iter by "+name)
+    
+    plt.subplot(223)
     plt.imshow(it)
 
 try_energy_funciton(img, scharr_energy.energy_map, 'vertical', cuts, 'scharr')
-try_energy_funciton(img, network_energy.energy_map, 'vertical', cuts, 'network')
+try_energy_funciton(img, part1_energy.energy_map, 'vertical', cuts, 'part1')
 
 
 plt.figure()
