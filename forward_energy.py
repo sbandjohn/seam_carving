@@ -5,8 +5,10 @@ from scipy import signal
 def dist(pixel_1, pixel_2) : 
     ret = 0.0
     c = pixel_1.size
-    for x in range(c): 
-        ret += np.abs(pixel_1[x] - pixel_2[x])
+    p_1 = pixel_1.astype(np.int32)
+    p_2 = pixel_2.astype(np.int32)
+    for x in range(c):
+        ret += np.abs(p_1[x] - p_2[x])
         if (ret > 1000000) or (ret < 0) : 
             print(ret)
     return ret
