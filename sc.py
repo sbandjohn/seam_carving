@@ -35,16 +35,16 @@ def dp_forward(E_l, E_u, E_r, border):
 
             temp = 10000000
 
-            if j > leftmost and value[i][j - 1] + E_l[i][j] < temp : 
-                temp = value[i][j - 1] + E_l[i][j]
+            if j > leftmost and value[i - 1][j - 1] + E_l[i][j] < temp : 
+                temp = value[i - 1][j - 1] + E_l[i][j]
                 t = j - 1
 
-            if value[i][j] + E_u[i][j] < temp : 
-                temp = value[i][j] + E_l[i][j]
+            if value[i - 1][j] + E_u[i][j] < temp : 
+                temp = value[i - 1][j] + E_l[i][j]
                 t = j
 
-            if j < rightmost and value[i][j + 1] + E_r[i][j] < temp : 
-                temp = value[i][j + 1] + E_r[i][j]
+            if j < rightmost and value[i - 1][j + 1] + E_r[i][j] < temp : 
+                temp = value[i - 1][j + 1] + E_r[i][j]
                 t = j + 1
 
             dir[i][j] = t - j
