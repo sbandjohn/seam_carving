@@ -12,11 +12,10 @@ ones = np.ones([9, 9])
 # problem: boundary
 def minus_entropy(img, show=False):
     f = color.rgb2gray(img)
-    sf = signal.convolve2d(f, ones, mode='same', boundary='fill', fillvalue=0)
-    p = f / sf
-    log_p = np.log(p+EPSILON)
-    plog_p = p * log_p
-    minusH = signal.convolve2d(plog_p, ones, mode='same', boundary='fill', fillvalue=0)
+    sf = signal.convolve2d(f, ones, mode='same', boundary='symm')
+    p = f / sf + EPSILON
+    plog_p = p * np.log(p)
+    minusH = signal.convolve2d(plog_p, ones, mode='same', boundary='symm')
     # greater entropy, more uniform the distrbution, less energy
     if show:
         print(minusH)
@@ -64,10 +63,10 @@ def range_normalize(v, a, b):
     return (v - mi)/(ma-mi)*(b-a) + a
 
 def combine(img, show=False):
-    rmH = minus_entropy(img)
-    mH = range_normalize(rmH, 0, 1)
-    RGB = range_normalize(RGBdiffernece(img), 0, 1)
-    res = mH+RGB
+    # combine minus entropy and RGB difference, ratio= 1:1
+    mH = range_normalize(minus_entropy(img, show), 0, 1)
+    RGB = range_normalize(RGBdiffernece(img, show), 0, 1)
+    res = mH + RGB
 
     if show:
         plt.figure()
