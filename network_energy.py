@@ -19,7 +19,7 @@ cfg = {
 }
 
 cfgmasks = {
-    'E': [ 1,  1,  0,    1,   1,   0,   1,   1,   1,   1,  0,   1,   1,   1,   1,   0,   1,   1,   1,   1,   0],
+    'E': [ 0,  1,  0,    0,   1,   0,   0,   1,   0,   1,  0,   0,   1,   0,   1,   0,   0,   1,   0,   0,   0],
 }
 
 class Vgg_features(nn.Module):
@@ -73,6 +73,12 @@ def mean_normalize(v, mean):
     m = v.mean()
     return v*mean/m
 
+def range_normalize(v, a, b):
+    mi = v.min()
+    ma = v.max()
+    return (v - mi)/(ma-mi)*(b-a) + a
+
+
 def project(m, shape):
     # project one channel map m to a new map of shape=(H1,W1)
     pil = Image.fromarray(m)
@@ -98,7 +104,7 @@ def energy_map(img_rgb, show=False):
     normalized_vecs = [mean_normalize(vecs[i], 1.0) for i in range(L)]
     normalized_maps = [normalized_vecs[i].reshape(sizes[i]) for i in range(L)]
     """
-    normalized_maps = [mean_normalize(m, 1.0) for m in maps]
+    normalized_maps = [range_normalize(m, 0, 1) for m in maps]
     projected_maps = [project(m, (h, w)) for m in normalized_maps]
     #print("projected")
     sum_map = sum(projected_maps)

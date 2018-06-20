@@ -8,7 +8,7 @@ import forward_energy
 import part1_energy
 
 image_dir = "dolphin.jpg"
-cuts = 40
+cuts = 80
 
 # seam carve and show result
 img = io.imread(image_dir)
@@ -24,12 +24,12 @@ def try_energy_funciton(img, func, orientation, num, name, forward = False):
     #   func: function to calculate energy map of 'img'
     #   orientation: 'horizontal' or 'vertical'
     #   num: number of cuts
-
     print("trying "+name+" ===================")
 
-    # show first k seams
+    # get energy map
     em = func(img)
-    print(em.shape)
+    
+    # show first k seams
     seams = sc.first_k_seams(img, em, orientation, k = 30, border=2, forward = False)
 
     plt.figure()
@@ -46,8 +46,8 @@ def try_energy_funciton(img, func, orientation, num, name, forward = False):
     plt.subplot(222)
     plt.imshow(once)
 
-    # iteratively calculate energy map and cut 'percuts' seams each time
 
+    # iteratively calculate energy map and cut 'percuts' seams each time
     times = 5
     percuts = num//times
     em = func(img)
@@ -61,8 +61,8 @@ def try_energy_funciton(img, func, orientation, num, name, forward = False):
     plt.imshow(it)
 
 #try_energy_funciton(img, forward_energy.energy_map, 'vertical', cuts, 'forward')
-try_energy_funciton(img, part1_energy.minus_entropy, 'vertical', cuts, 'minusH')
-
+try_energy_funciton(img, part1_energy.combine, 'vertical', cuts, 'combine')
+try_energy_funciton(img, network_energy.energy_map, 'vertical', cuts, 'network')
 
 plt.figure()
 plt.title('Original Image')
