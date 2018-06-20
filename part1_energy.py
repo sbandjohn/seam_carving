@@ -4,23 +4,13 @@ import torchvision.transforms as transforms
 from skimage import filters, color, io
 import matplotlib.pyplot as plt
 
-"""
-kernels = []
-for i in range(3):
-    for j in range(3):
-        if (i, j) != (1, 1):
-            tmp = np.zeros([3, 3])
-            tmp[i][j] = -1
-            tmp[1][1] = 1
-            kernels.append(tmp)
-"""
-
 dxy = [(i-1, j-1) for j in range(3) for i in range(3) if (i, j)!=(1, 1)]
 
 EPSILON = 1e-3
 ones = np.ones([9, 9])
 
-def entropy(img, show=False):
+# problem: boundary
+def minus_entropy(img, show=False):
     f = color.rgb2gray(img)
     sf = signal.convolve2d(f, ones, mode='same', boundary='fill', fillvalue=0)
     p = f / sf
@@ -28,6 +18,12 @@ def entropy(img, show=False):
     plog_p = p * log_p
     minusH = signal.convolve2d(plog_p, ones, mode='same', boundary='fill', fillvalue=0)
     # greater entropy, more uniform the distrbution, less energy
+    if show:
+        print(minusH)
+        print(minusH.min(), minusH.max())
+        plt.figure()
+        plt.title('minusH')
+        plt.imshow(minusH)
     return minusH
 
 def RGBdiffernece(img, show=False):
@@ -53,53 +49,34 @@ def RGBdiffernece(img, show=False):
                     values[i][j] += tmp
             values[i][j] /= cnt
     values = values / 3
-    """
-        for kernel in kernels:
-            tmp = signal.convolve2d(rgb[k], kernel, mode='same', boundary='fill', fillvalue=0)
-            values += np.absolute(tmp)
-            if show:
-                print("convolve")
-                print(rgb[k])
-                print("  with")
-                print(kernel)
-                print("  gets")
-                print(tmp)
     if show:
         print(values)
-    values = values / 3
-    neighbors = np.ones([h, w], dtype=np.int)*8
-    for (i,j) in ((0,0), (0, w-1), (h-1, 0), (h-1, w-1)):
-        neighbors[i][j] = 3
-    for i in range(1, h-1):
-        neighbors[i][0] = neighbors[i][w-1] = 5
-    for j in range(1, w-1):
-        neighbors[0][j] = neighbors[h-1][j] = 5
-    if show:
-        print(neighbors)
-    values = values / neighbors
-    """
-    if show:
-        print(values)
-    return values
-
-def mean_std_normalize(v, mean, std):
-    s = v.std()
-    m = v.mean()
-    return v*mean/m * std/s
-
-def combine(img, show=True):
-    H = mean_std_normalize(entropy(img), mean=1.0, std=1.0)
-    RGB = mean_std_normalize(RGBdiffernece(img), mean=1.0, std=1.0)
-    if show:
-        plt.figure()
-        plt.title("H")
-        plt.show(H)
+        print(values.min())
+        print(values.max())
         plt.figure()
         plt.title("RGB")
-        plt.show(RGB)
-        print(H.max(), H.min())
+        plt.imshow(values)
+    return values
+
+def range_normalize(v, a, b):
+    mi = v.min()
+    ma = v.max()
+    return (v - mi)/(ma-mi)*(b-a) + a
+
+def combine(img, show=False):
+    rmH = minus_entropy(img)
+    mH = range_normalize(rmH, 0, 1)
+    RGB = range_normalize(RGBdiffernece(img), 0, 1)
+    res = mH+RGB
+
+    if show:
+        plt.figure()
+        plt.title('combine')
+        plt.imshow(RGB)
+        print(mH.max(), mH.min())
         print(RGB.max(), RGB.min())
-    return H + RGB
+        
+    return res
 
 
 def test():
