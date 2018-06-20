@@ -22,6 +22,36 @@ def dp(E, border):
             dir[i][j] = t - j
     return value, dir
 
+def dp_forward(E_l, E_u, E_r, border):
+
+    h, w = E_l.shape
+    leftmost = border
+    rightmost = w-1-border
+    dir = np.zeros(E_l.shape, dtype=np.int64)
+    value = np.array(E_l)
+
+    for i in range(1, h):
+        for j in range(leftmost, rightmost+1):
+
+            temp = 10000000
+
+            if j > leftmost and value[i][j - 1] + E_l[i][j] < temp : 
+                temp = value[i][j - 1] + E_l[i][j]
+                t = j - 1
+
+            if value[i][j] + E_u[i][j] < temp : 
+                temp = value[i][j] + E_l[i][j]
+                t = j
+
+            if j < rightmost and value[i][j + 1] + E_r[i][j] < temp : 
+                temp = value[i][j + 1] + E_r[i][j]
+                t = j + 1
+
+            dir[i][j] = t - j
+            value[i][j] = temp
+
+    return value, dir
+
 def backtrace(dir, h, pos):
     positions = [-1 for i in range(h)]
     for i in range(h-1, 0, -1):
@@ -43,14 +73,18 @@ def cut_by_seam(img, seam):
         new[i][pos:w-1] = img[i][pos+1:w]
     return new
 
-def carve_vertical_once(img, energy, border = 1):
+def carve_vertical_once(img, energy, border = 1, forward = False):
     #direction = "vertical" or "horizontal"
     #border: prevent border from being cut
     #output: carved img, energy
 
     h, w, c = img.shape
     print("dp...")
-    value, dir = dp(energy, border)
+    if forward == False : 
+        value, dir = dp(energy, border)
+    else : 
+        value, dir = dp_forward(E_l = energy[0], E_u = energy[1], E_r = energy[2], border = border)
+
     choice = -1
     for i in range(border, w-border):
         if choice==-1 or value[h-1][i] < value[h-1][choice]:
@@ -58,10 +92,16 @@ def carve_vertical_once(img, energy, border = 1):
     seam = backtrace(dir, h, choice)
     print("cut by seam...")
     img = cut_by_seam(img, seam)
-    energy = cut_by_seam(energy, seam)
+
+    if forward == False : 
+        energy = cut_by_seam(energy, seam)
+    else : 
+        for i in range(3) : 
+            energy[i] = cut_by_seam(energy[i], seam)
+
     return img, energy
 
-def carve(img, energy, direction, num = 1, border = 1):
+def carve(img, energy, direction, num = 1, border = 1, forward = False):
     #input
     #   num: number of seams to cut
     #   direction = "vertical" or "horizontal"
@@ -70,21 +110,33 @@ def carve(img, energy, direction, num = 1, border = 1):
 
     if direction == "horizontal":
         img = np.swapaxes(img, 0, 1)
-        energy = np.swapaxes(energy, 0, 1)
+        if forward == False : 
+            energy = np.swapaxes(energy, 0, 1)
+        else : 
+            for i in range(3) : 
+                energy[i] = np.swapaxes(energy[i], 0, 1)
     
     for i in range(num):
-        img, energy = carve_vertical_once(img, energy, border)
+        img, energy = carve_vertical_once(img, energy, border, forward)
 
     if direction == "horizontal":
         img = np.swapaxes(img, 0, 1)
     return img
 
-def first_k_seams(img, energy, direction, k=1, border = 1):
+def first_k_seams(img, energy, direction, k=1, border = 1, forward = False):
     if direction == "horizontal":
         img = np.swapaxes(img, 0, 1)
-        energy = np.swapaxes(energy, 0, 1)
+        if forward == False : 
+            energy = np.swapaxes(energy, 0, 1)
+        else : 
+            for i in range(3) : 
+                energy[i] = np.swapaxes(energy[i], 0, 1)
       
-    value, dir = dp(energy, border)
+    if forward == False : 
+        value, dir = dp(energy, border)
+    else : 
+        value, dir = dp_forward(E_l = energy[0], E_u = energy[1], E_r = energy[2], border = border)
+
     h, w = img.shape[0], img.shape[1]
     leftmost = border; rightmost = w-1-border
     ps = [ (value[h-1][i], i) for i in range(leftmost, rightmost+1) ]
