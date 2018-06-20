@@ -24,17 +24,17 @@ def energy_map(img):
 
     for i in range(1, h): 
         for j in range(w): 
-            if (j > 0) and (j < h - 1): 
+            if (j > 0) and (j < w - 1): 
                 E_l[i][j] = dist(img[i][j + 1], img[i][j - 1]) + dist(img[i - 1][j], img[i][j - 1])
             else :
                 E_l[i][j] = 10000000
 
-            if (j > 0) and (j < h - 1)  : 
+            if (j > 0) and (j < w - 1)  : 
                 E_u[i][j] = dist(img[i][j + 1], img[i][j - 1])
             else : 
                 E_u[i][j] = 10000000
 
-            if (j > 0) and (j < h - 1) : 
+            if (j > 0) and (j < w - 1) : 
                 E_r[i][j] = dist(img[i][j + 1], img[i][j - 1]) + dist(img[i - 1][j], img[i][j + 1])
             else : 
                 E_r[i][j] = 10000000

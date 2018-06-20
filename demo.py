@@ -7,8 +7,8 @@ import scharr_energy
 import forward_energy
 import part1_energy
 
-image_dir = "cat.jpg"
-cuts = 20
+image_dir = "wave.jpg"
+cuts = 50
 
 # seam carve and show result
 img = io.imread(image_dir)
