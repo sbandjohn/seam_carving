@@ -25,7 +25,7 @@ def minus_entropy(img, show=False):
         plt.imshow(minusH)
     return minusH
 
-def RGBdiffernece(img, show=False):
+def RGBdifference(img, show=False):
     # img: h*w*c array. byte array: 0~255
     # convert it to normalized torch tensor c*h*w
     # then to numpy array
@@ -65,7 +65,7 @@ def range_normalize(v, a, b):
 def combine(img, show=False):
     # combine minus entropy and RGB difference, ratio= 1:1
     mH = range_normalize(minus_entropy(img, show), 0, 1)
-    RGB = range_normalize(RGBdiffernece(img, show), 0, 1)
+    RGB = range_normalize(RGBdifference(img, show), 0, 1)
     res = mH + RGB
 
     if show:
