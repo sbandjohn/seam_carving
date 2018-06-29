@@ -1,29 +1,45 @@
 import numpy as np
-from skimage import filters, color
+from skimage import filters, color, io
 from scipy import signal
-
-# filter for energy map
-scharr = np.array([[ -3-3j, 0-10j,  +3 -3j],
-                   [-10+0j, 0+ 0j, +10 +0j],
-                   [ -3+3j, 0+10j,  +3 +3j]]) # Gx + j*Gy
 
 kernel_u = np.array([[0, 0, 0],
                       [-1, 0, +1],
                       [0, 0, 0]])
 
-kernel_l = np.array([[0, +1, 0],
-                      [-1, 0, 0],
+kernel_l1 = np.array([[0, 0, 0],
+                      [0, 0, -1],
+                      [0, +1, 0]])
+
+kernel_l2 = np.array([[0, 0, 0],
+                      [-1, 0, +1],
                       [0, 0, 0]])
 
-kernel_r = np.array([[0, +1, 0],
-                      [0, 0, -1],
+kernel_r1 = np.array([[0, 0, 0],
+                      [-1, 0, 0],
+                      [0, +1, 0]])
+
+kernel_r2 = np.array([[0, 0, 0],
+                      [-1, 0, 1],
                       [0, 0, 0]])
 
 def energy_map(img):
     # input: image in rgb of size h*w*c, c=3
     # output: energy map: numpy array of size h*w
 
-    gray = color.rgb2gray(img)
+    #gray = color.rgb2gray(img)
+    h, w, c = img.shape
+    aha = [img[..., k] for k in range(c)]
+    E_u = np.zeros([h, w])
+    E_l = np.zeros([h, w])
+    E_r = np.zeros([h, w])
+
+    for k in range(c):
+        E_u += np.absolute(signal.convolve2d(aha[k], kernel_u, boundary='symm', mode='same'))
+        E_l += np.absolute(signal.convolve2d(aha[k], kernel_l1, boundary='symm', mode='same'))
+        E_l += np.absolute(signal.convolve2d(aha[k], kernel_l2, boundary='symm', mode='same'))
+        E_r += np.absolute(signal.convolve2d(aha[k], kernel_r1, boundary='symm', mode='same'))
+        E_r += np.absolute(signal.convolve2d(aha[k], kernel_r2, boundary='symm', mode='same'))
+    """
     E_u = signal.convolve2d(gray, kernel_u, boundary='symm', mode='same')
     E_u = np.absolute(E_u)
 
@@ -34,6 +50,23 @@ def energy_map(img):
     E_r = signal.convolve2d(gray, kernel_r, boundary='symm', mode='same')
     E_r = np.absolute(E_r)
     E_r = E_r + E_u
+    """
 
-    return np.array([E_l, E_u, E_r])
+    return np.array([E_l, E_u, E_r], dtype=np.float64)
 
+def test():
+    img = io.imread('dolphin.jpg')
+    import forward_energy as fe
+    m2 = fe.energy_map(img)
+    m2 = energy_map(img)
+    print(m2[0])
+    for i in range(5):
+        print()
+    print(m2[0])
+    #plt.figure()
+    #plt.imshow(m1[0])
+
+    #plt.show()
+
+if __name__=="__main__":
+    test()

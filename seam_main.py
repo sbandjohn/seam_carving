@@ -4,7 +4,7 @@ import sys
 
 import sc
 import network_energy
-import forward_energy
+import forward_conv_energy
 import part1_energy
 
 """ dolphin size: 239*200 c*r """
@@ -24,7 +24,7 @@ def get_setting(type):
     if type == 1:
         return {'func':part1_energy.combine, 'forward':False}
     if type == 2:
-        return {'func':forward_energy.energy_map, 'forward':True}
+        return {'func':forward_conv_energy.energy_map, 'forward':True}
     if type == 3:
         return {'func':network_energy.energy_map, 'forward':False}
 

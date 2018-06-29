@@ -4,7 +4,7 @@ import random
 
 import sc
 import network_energy
-import scharr_energy
+import forward_conv_energy
 import forward_energy
 import part1_energy
 
@@ -88,7 +88,7 @@ def try_resize(ori, func, forward, cut_r, cut_c, name):
     #for seam in carved2:
     #    draw_seam(seam.coor)
 
-try_resize(img, part1_energy.RGBdifference, False, -15, -55, "cut:RGB")
+try_resize(img, forward_conv_energy.energy_map, True, -15, -55, "cut:forward")
 #try_resize(img, part1_energy.combine, False, +10, +20, "enlarge:RGB+entropy")
 #try_resize(img, forward_energy.energy_map, True, -15, -55, "cut:forward")
 #compare_resize(img, part1_energy.combine, False, -15, -55, "resize: RGB+entropy",
