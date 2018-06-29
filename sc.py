@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import math
+from numba import jit
 
 class Seam:
     def __init__(self, one_coor=None, dir=None):
@@ -146,6 +147,7 @@ def transform_seams(old_seams):
             seams[j] = seams[j].transform(seams[i])
     return seams
 
+#@jit
 def dp(E, border):
     h, w = E.shape
     leftmost = border
@@ -168,6 +170,7 @@ def dp(E, border):
             dir[i][j] = t - j
     return value, dir
 
+#@jit
 def dp_forward(E_l, E_u, E_r, border):
 
     h, w = E_l.shape
@@ -253,6 +256,7 @@ def carve_vertical_once(img, energy, border = 1, forward = False, need_seam=Fals
     if forward == False : 
         value, dir = dp(energy, border)
     else : 
+        print("   dp forward...")
         value, dir = dp_forward(E_l = energy[0], E_u = energy[1], E_r = energy[2], border = border)
 
     choice = -1
@@ -284,6 +288,7 @@ def carve(img, func, forward, direction, num = 1, border = 1, need_seam=False):
     #   border: prevent border from being cut
     #output: carved img
 
+    print("calculating energy...")
     if direction == "horizontal":
         if forward == False:
             energy = np.swapaxes(func(img), 0, 1)
