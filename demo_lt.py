@@ -8,7 +8,10 @@ import scharr_energy
 import forward_energy
 import part1_energy
 
-image_dir = "dolphin.jpg"
+image_dir = "cat.jpg"
+# sb: 500*375 c*r
+# cat: 360*263
+
 cuts = 20
 
 # seam carve and show result
@@ -25,39 +28,62 @@ def determine_directions(dr, dc):
     random.shuffle(dirs)
     return dirs
 
-def try_resize(ori, func, cut_r, cut_c, forward=False):
+def try_resize(ori, func, forward, cut_r, cut_c, name, func2, forward2, name2):
     r, c = ori.shape[0], ori.shape[1]
     out_r = r + cut_r
     out_c = c + cut_c
 
+    """
     img = ori
     dirs = sc.determine_directions(img, func, forward, out_r, out_c)
     carved_seams = []
+    cnt = 0
+    len_d = len(dirs)
     for d in dirs:
-        em = func(img)
-        img, tmp_seams = sc.carve(img, em, d, num=1, border=1, forward=forward, need_seam=True)
+        #em = func(img)
+        print("process {}/{}".format(cnt, len_d))
+        cnt += 1
+        img, tmp_seams = sc.carve(img, func, forward, d, num=1, border=1, need_seam=True)
         carved_seams += tmp_seams
     seams = sc.transform_seams(carved_seams)
+    """
 
-    img2, carved2 = sc.resize(ori, func, forward, out_r, out_c, need_seam=True, dirs=dirs)
+    #img = sc.resize_once(ori, func, forward, out_r, out_c)
+    img = sc.resize_multi(ori, func, forward, out_r, out_c)
+    img2 = sc.resize_multi(ori, func2, forward2, out_r, out_c)
 
     plt.figure()
     plt.subplot(121)
+    plt.title(name)
     plt.imshow(img)
-    for seam in carved_seams:
-        draw_seam(seam.coor)
+    #for seam in seams:
+    #    draw_seam(seam.coor)
     plt.subplot(122)
+    plt.title(name2)
     plt.imshow(img2)
-    for seam in carved2:
-        draw_seam(seam.coor)
-    
-    plt.figure()
-    plt.title("resized")
-    plt.imshow(img2)
+    plt.savefig(name+" vs "+name2)
+    #for seam in carved2:
+    #    draw_seam(seam.coor)
 
-#try_resize(img, forward_energy.energy_map, 1, 0, forward=True)
-#try_resize(img, part1_energy.combine, 10, 10, forward=False)
-try_resize(img, network_energy.energy_map, 0, 100, forward=False)
+"""
+def compare_resize(ori, cut_r, cut_c):
+    r, c = ori.shape[0], ori.shape[1]
+    out_r = r + cut_r
+    out_c = c + cut_c
+    img = ori
+    dirs = sc.determine_directions(img, func, forward, out_r, out_c)
+
+    img1 = 
+"""
+
+#try_resize(img, part1_energy.RGBdifference, False, -15, -55, "cut:RGB")
+#try_resize(img, part1_energy.combine, False, +10, +20, "enlarge:RGB+entropy")
+#try_resize(img, forward_energy.energy_map, True, -15, -55, "cut:forward")
+try_resize(img, part1_energy.combine, False, +60, -60, "RGB+entropy",
+                forward_energy.energy_map, True, "forward")
+
+#try_resize(img, part1_energy.combine, -40, 0, forward=False)
+#try_resize(img, network_energy.energy_map, -50, 0, forward=False)
 
 plt.figure()
 plt.title('Original Image')

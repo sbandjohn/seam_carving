@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import math
 
 class Seam:
     def __init__(self, one_coor=None, dir=None):
@@ -170,7 +171,6 @@ def dp(E, border):
 def dp_forward(E_l, E_u, E_r, border):
 
     h, w = E_l.shape
-    print("shape:", h, w)
     leftmost = border
     rightmost = w-1-border
     dir = np.zeros(E_l.shape, dtype=np.int64)
@@ -277,7 +277,7 @@ def carve_vertical_once(img, energy, border = 1, forward = False, need_seam=Fals
     else:
         return img, energy
 
-def carve(img, energy, direction, num = 1, border = 1, forward = False, need_seam=False):
+def carve(img, func, forward, direction, num = 1, border = 1, need_seam=False):
     #input
     #   num: number of seams to cut
     #   direction = "vertical" or "horizontal"
@@ -285,13 +285,13 @@ def carve(img, energy, direction, num = 1, border = 1, forward = False, need_sea
     #output: carved img
 
     if direction == "horizontal":
+        if forward == False:
+            energy = np.swapaxes(func(img), 0, 1)
         img = np.swapaxes(img, 0, 1)
-        if forward == False : 
-            energy = np.swapaxes(energy, 0, 1)
-        else : 
-            for i in range(3) :
-                energy[i] = np.swapaxes(energy[i], 0, 1)
-            #energy = np.swapaxes(energy, 1, 2)
+        if forward == True:
+            energy = func(img)
+    else:
+        energy = func(img)
     
     seams = []
     for i in range(num):
@@ -318,7 +318,33 @@ def determine_directions(img, func, forward, out_r, out_c):
     random.shuffle(dirs)
     return dirs
 
-def resize(ori, func, forward, out_r, out_c, need_seam=False, dirs = None):
+step_size = 20
+
+def one_sequence(a, b, step_size):
+    res = [a]
+    t = a
+    while (a<b and t<b) or (a>b and t>b):
+        if a<b:
+            t += step_size
+            if t>b: t = b
+        else:
+            t -= step_size
+            if t<b: t = b
+        res.append(t)
+    return res
+
+def resize_sequence(r, c, out_r, out_c):
+    rs = one_sequence(r, out_r, step_size)
+    cs = one_sequence(c, out_c, step_size)
+    n1 = len(rs)
+    n2 = len(cs)
+    if n1<n2:
+        rs += [rs[-1]]*(n2-n1)
+    if n2<n1:
+        cs += [cs[-1]]*(n1-n2)
+    return [[rs[i], cs[i]] for i in range(1, max(n1, n2))]
+
+def resize_once(ori, func, forward, out_r, out_c, need_seam=False, dirs = None):
     if dirs == None:
         dirs = determine_directions(ori, func, forward, out_r, out_c)
 
@@ -328,16 +354,18 @@ def resize(ori, func, forward, out_r, out_c, need_seam=False, dirs = None):
     len_dir = len(dirs)
     for i in range(len_dir):
         d = dirs[i]
-        em = func(img)
         print("process {}/{}".format(i, len_dir))
-        img, tmp_seams = carve(img, em, d, num=1, border=1, forward=forward, need_seam=True)
+        img, tmp_seams = carve(img, func, forward, d, num=1, border=1, need_seam=True)
         carved_seams += tmp_seams
     
     get_op = lambda input, output: 'cut' if input>output else 'enlarge'
     row_op = get_op(ori.shape[0], out_r)
     col_op = get_op(ori.shape[1], out_c)
-    #if row_op == 'cut' and col_op == 'cut':
-    #    return img
+    if row_op == 'cut' and col_op == 'cut':
+        if need_seam:
+            return img, carved_seams
+        else:
+            return img
 
     # cut or enlarge by seams
     img = ori
@@ -363,3 +391,8 @@ def resize(ori, func, forward, out_r, out_c, need_seam=False, dirs = None):
     else:
         return img
 
+def resize_multi(ori, func, forward, out_r, out_c):
+    seq = resize_sequence(ori.shape[0], ori.shape[1], out_r, out_c)
+    for s in seq:
+        ori = resize_once(ori, func, forward, s[0], s[1])
+    return ori
