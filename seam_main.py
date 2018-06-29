@@ -7,8 +7,6 @@ import network_energy
 import forward_conv_energy
 import part1_energy
 
-""" dolphin size: 239*200 c*r """
-
 image_dir = sys.argv[1]
 print(sys.argv)
 

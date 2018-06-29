@@ -7,12 +7,14 @@ import network_energy
 import forward_conv_energy
 import forward_energy
 import part1_energy
+import combined_energy
 
-image_dir = "dolphin.jpg"
+image_dir = "cutecat.jpg"
 # sb: 500*375 c*r
 # cat: 360*263
-# cute cat: 500*330 c*r
+# cute cat: 333*220 c*r
 # timg: 325*186
+# 
 
 cuts = 20
 
@@ -30,7 +32,7 @@ def determine_directions(dr, dc):
     random.shuffle(dirs)
     return dirs
 
-def compare_resize(ori, func, forward, cut_r, cut_c, name, func2, forward2, name2):
+def compare_resize(ori, func, forward, cut_r, cut_c, name, func2, forward2, name2, filename):
     r, c = ori.shape[0], ori.shape[1]
     out_r = r + cut_r
     out_c = c + cut_c
@@ -63,42 +65,71 @@ def compare_resize(ori, func, forward, cut_r, cut_c, name, func2, forward2, name
     plt.subplot(122)
     plt.title(name2)
     plt.imshow(img2)
-    plt.savefig(name+" vs "+name2)
+    plt.savefig(filename)
     #for seam in carved2:
     #    draw_seam(seam.coor)
 
-def try_resize(ori, func, forward, cut_r, cut_c, name):
+def compare_resize_3(ori, func1, forward1, cut_r, cut_c, name1, func2, forward2, name2, func3, forward3, name3, filename):
     r, c = ori.shape[0], ori.shape[1]
     out_r = r + cut_r
     out_c = c + cut_c
 
-    img, carved_seams = sc.resize_once(ori, func, forward, out_r, out_c, need_seam=True)
-    seams = sc.transform_seams(carved_seams)
+    img1 = sc.resize_multi(ori, func1, forward1, out_r, out_c)
+    img2 = sc.resize_multi(ori, func2, forward2, out_r, out_c)
+    img3 = sc.resize_multi(ori, func3, forward3, out_r, out_c)
 
     plt.figure()
-    plt.subplot(121)
-    plt.title(name+' seams')
-    plt.imshow(ori)
-    for seam in seams:
-        draw_seam(seam.coor)
-    plt.subplot(122)
-    plt.title(name+" result")
-    plt.imshow(img)
-    plt.savefig(name)
+    plt.subplot(131)
+    plt.title(name1)
+    plt.imshow(img1)
+    #for seam in seams:
+    #    draw_seam(seam.coor)
+    plt.subplot(132)
+    plt.title(name2)
+    plt.imshow(img2)
+    plt.subplot(133)
+    plt.title(name3)
+    plt.imshow(img3)
+    plt.savefig(filename)
     #for seam in carved2:
     #    draw_seam(seam.coor)
 
-try_resize(img, forward_conv_energy.energy_map, True, -15, -55, "cut:forward")
+def try_resize(ori, func, forward, cut_r, cut_c, name, filename):
+    r, c = ori.shape[0], ori.shape[1]
+    out_r = r + cut_r
+    out_c = c + cut_c
+
+    img = sc.resize_multi(ori, func, forward, out_r, out_c)
+
+    plt.figure()
+    plt.subplot(121)
+    plt.title("original")
+    plt.imshow(ori)
+    #for seam in seams:
+    #    draw_seam(seam.coor)
+    plt.subplot(122)
+    plt.title(name+" result")
+    plt.imshow(img)
+    plt.savefig(filename)
+    #for seam in carved2:
+    #    draw_seam(seam.coor)
+
+#try_resize(img, forward_conv_energy.energy_map, True, -15, -55, "cut:forward")
 #try_resize(img, part1_energy.combine, False, +10, +20, "enlarge:RGB+entropy")
-#try_resize(img, forward_energy.energy_map, True, -15, -55, "cut:forward")
-#compare_resize(img, part1_energy.combine, False, -15, -55, "resize: RGB+entropy",
-#                forward_energy.energy_map, True, "resize: forward")
+#try_resize(img, network_energy.energy_map, False, 0, 150, "network", '3 150 network')
+#compare_resize(img, network_energy.energy_map, False, 0, 100, "network",
+#                    network_energy.tail_map, False, "tail", "3 100 network vs tail")
 
-#try_resize(img, part1_energy.combine, -40, 0, forward=False)
-#try_resize(img, network_energy.energy_map, -50, 0, forward=False)
+#compare_resize(img, part1_energy.combine, False, 0, 150, "RGB+entropy",
+#                    forward_conv_energy.energy_map, True, " forward", "3 150 RGB_entopy vs forward")
 
+compare_resize_3(img, part1_energy.combine, False, -50, 60, "RGB+entropy",
+                    network_energy.tail_map, False, "tail", 
+                    combined_energy.part1_tail, False, "combined", "cutecat -+ RGB tail combined")
+
+"""
 plt.figure()
 plt.title('Original Image')
 plt.imshow(img)
-
+"""
 plt.show()

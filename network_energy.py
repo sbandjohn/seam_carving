@@ -19,14 +19,16 @@ cfg = {
 }
 
 cfgmasks = {
-    'E': [ 0,  1,  0,    0,   1,   0,   0,   1,   0,   1,  0,   0,   1,   0,   1,   0,   0,   1,   0,   1,   0],
+ 'many': [ 0,  1,  0,    0,   1,   0,   0,   1,   0,   1,  0,   0,   1,   0,   1,   0,   0,   1,   0,   1,   0],
+ 'tail': [ 0,  0,  0,    0,   0,   0,   0,   0,   0,   1,  0,   0,   1,   0,   1,   0,   0,   1,   0,   1,   0],
+'front': [ 0,  1,  0,    0,   1,   0,   0,   1,   0,   1,  0,   0,   0,   0,   1,   0,   0,   0,   0,   0,   0],
 }
 
 class Vgg_features(nn.Module):
-    def __init__(self, vgg):
+    def __init__(self, vgg, name):
         super(Vgg_features, self).__init__()
         self.cfg = cfg['E']
-        cfgmask = cfgmasks['E']
+        cfgmask = cfgmasks[name]
         self.mask = []
         for i in range(len(cfgmask)):
             if self.cfg[i]=='M':
@@ -50,7 +52,9 @@ class Vgg_features(nn.Module):
                 output.append(x)
         return output
 
-vgg_features = Vgg_features(vgg19)
+vgg_many = Vgg_features(vgg19, 'many')
+vgg_tail = Vgg_features(vgg19, 'tail')
+vgg_front =Vgg_features(vgg19, 'front')
 
 def channels_to_map(channels):
     m = channels.mean(0)
@@ -85,50 +89,56 @@ def project(m, shape):
     img = transforms.Resize(shape)(pil)
     return numpy.array(img)
 
-def energy_map(img_rgb, show=False):
-    #input: rgb image, format: h*w*3
-    #output: h*w numpy array of numpy.float64
-    img = data_transform(img_rgb)
-    img = torch.tensor(img, dtype=torch.float)
-    c, h, w = img.shape
-    assert h>=100 and w>=100, "image too smal -- feature_map.energy_map: {}*{}".format(h, w)
-    imgs = torch.stack([img])
-    all_features = vgg_features(imgs)
-    np_features = [ all[0].detach().numpy() for all in all_features ]
-    L = len(np_features)
-    maps = [channels_to_map(f) for f in np_features]
-    #print("got features")
-    """
-    sizes= [m.shape for m in maps]
-    vecs = [m.view(-1) for m in maps]
-    normalized_vecs = [mean_normalize(vecs[i], 1.0) for i in range(L)]
-    normalized_maps = [normalized_vecs[i].reshape(sizes[i]) for i in range(L)]
-    """
-    normalized_maps = [range_normalize(m, 0, 1) for m in maps]
-    projected_maps = [project(m, (h, w)) for m in normalized_maps]
-    #print("projected")
-    sum_map = sum(projected_maps)
-    mean_map = mean_normalize(sum_map, 1.0)
-    res = numpy.array(mean_map, dtype=numpy.float64)
+def get_energy_map(vgg_features):
+    def inner(img_rgb, show=False):
+        #input: rgb image, format: h*w*3
+        #output: h*w numpy array of numpy.float64
+        img = data_transform(img_rgb)
+        img = torch.tensor(img, dtype=torch.float)
+        c, h, w = img.shape
+        assert h>=80 and w>=80, "image too smal -- feature_map.energy_map: {}*{}".format(h, w)
+        imgs = torch.stack([img])
+        all_features = vgg_features(imgs)
+        np_features = [ all[0].detach().numpy() for all in all_features ]
+        L = len(np_features)
+        maps = [channels_to_map(f) for f in np_features]
+        #print("got features")
+        """
+        sizes= [m.shape for m in maps]
+        vecs = [m.view(-1) for m in maps]
+        normalized_vecs = [mean_normalize(vecs[i], 1.0) for i in range(L)]
+        normalized_maps = [normalized_vecs[i].reshape(sizes[i]) for i in range(L)]
+        """
+        normalized_maps = [range_normalize(m, 0, 1) for m in maps]
+        projected_maps = [project(m, (h, w)) for m in normalized_maps]
+        #print("projected")
+        sum_map = sum(projected_maps)
+        mean_map = mean_normalize(sum_map, 1.0)
+        res = numpy.array(mean_map, dtype=numpy.float64)
 
-    if not show:
-        return res
+        if not show:
+            return res
     
-    plt.figure(1)
-    for i in range(L):
-        pm = projected_maps[i]
-        nm = normalized_maps[i]
-        plt.subplot(1, L, i+1)
-        print(nm.shape)
-        print("  mean pm nm:",pm.mean(), nm.mean())
-        print("  pm min:", pm.min(), "   nm min:", nm.min())
-        print("  pm max:", pm.max(), "   nm max:", nm.max())
-        print("  sum pm nm:", pm.sum(), nm.sum())
-        plt.imshow(nm.tolist())
-    plt.figure(2)
-    plt.imshow(res.tolist())
-    plt.show()
-    return res
+        plt.figure(1)
+        for i in range(L):
+            pm = projected_maps[i]
+            nm = normalized_maps[i]
+            plt.subplot(1, L, i+1)
+            print(nm.shape)
+            print("  mean pm nm:",pm.mean(), nm.mean())
+            print("  pm min:", pm.min(), "   nm min:", nm.min())
+            print("  pm max:", pm.max(), "   nm max:", nm.max())
+            print("  sum pm nm:", pm.sum(), nm.sum())
+            plt.imshow(nm.tolist())
+        plt.figure(2)
+        plt.imshow(res.tolist())
+        plt.show()
+        return res
+    return inner
+
+energy_map = get_energy_map(vgg_many)
+tail_map = get_energy_map(vgg_tail)
+front_map = get_energy_map(vgg_front)
 
 ## io image format: h*w*3
 def main():

@@ -323,7 +323,8 @@ def determine_directions(img, func, forward, out_r, out_c):
     random.shuffle(dirs)
     return dirs
 
-step_size = 20
+min_size = 20
+max_step = 3
 
 def one_sequence(a, b, step_size):
     res = [a]
@@ -339,6 +340,9 @@ def one_sequence(a, b, step_size):
     return res
 
 def resize_sequence(r, c, out_r, out_c):
+    tot = abs(r-out_r) + abs(c-out_c)
+    step_size = max(min_size, math.ceil(tot/max_step))
+
     rs = one_sequence(r, out_r, step_size)
     cs = one_sequence(c, out_c, step_size)
     n1 = len(rs)
@@ -398,6 +402,10 @@ def resize_once(ori, func, forward, out_r, out_c, need_seam=False, dirs = None):
 
 def resize_multi(ori, func, forward, out_r, out_c):
     seq = resize_sequence(ori.shape[0], ori.shape[1], out_r, out_c)
+    len_s = len(seq)
+    cnt = 0
     for s in seq:
+        print("total step: {}/{}".format(cnt, len_s))
+        cnt += 1
         ori = resize_once(ori, func, forward, s[0], s[1])
     return ori
