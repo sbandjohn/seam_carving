@@ -61,10 +61,8 @@ class Seam:
             if f[i] == -1:
                 if i==0:
                     f[i] = f[i+1]
-                if i==(n-1):
-                    f[i] = f[i-1]
                 else:
-                    f[i] = f[random.choice((i-1, i+1))]
+                    f[i] = f[i-1]
         return Seam(f, self.dir)
     
     def transform(self, other):
@@ -73,6 +71,64 @@ class Seam:
         else:
             return self.transform_different_dir(other)
     
+    def cut_by(self, other):
+        if self.dir == other.dir:
+            return self.cut_same_dir(other)
+        else:
+            return self.cut_different_dir(other)
+    
+    def cut_same_dir(self, other):
+        s = self.get_one_coor()
+        t = other.get_one_coor()
+        n = len(s)
+        f = [-1]*n
+        for i in range(n):
+            if s[i]<t[i]: f[i] = s[i]
+            else: f[i] = s[i] - 1
+        return Seam(f, self.dir)
+    
+    def cut_different_dir(self, other):
+        s = self.get_one_coor()
+        t = other.get_one_coor()
+        n = len(s)-1
+        f = [-1]*n
+        for i in range(n+1):
+            if i<t[s[i]]: f[i] = s[i]
+            else: f[i-1] = s[i]
+        return Seam(f, self.dir)
+    
+    def enlarge_by(self, other):
+        if self.dir == other.dir:
+            return self.enlarge_same_dir(other)
+        else:
+            return self.enlarge_different_dir(other)
+    
+    def enlarge_same_dir(self, other):
+        s = self.get_one_coor()
+        t = other.get_one_coor()
+        n = len(s)
+        f = [-1]*n
+        for i in range(n):
+            if s[i]<t[i]: f[i] = s[i]
+            else: f[i] = s[i] + 1
+        return Seam(f, self.dir)
+    
+    def enlarge_different_dir(self, other):
+        s = self.get_one_coor()
+        t = other.get_one_coor()
+        n = len(s)+1
+        f = [-1]*n
+        for i in range(n-1):
+            if i<=t[s[i]]: f[i] = s[i]
+            else: f[i+1] = s[i]
+        for i in range(n):
+            if f[i] == -1:
+                if i==0:
+                    f[i] = f[i+1]
+                else:
+                    f[i] = f[i-1]
+        return Seam(f, self.dir)
+
     def flip(self):
         one_coor = self.get_one_coor()
         if self.dir == 'vertical':
@@ -150,7 +206,14 @@ def backtrace(dir, h, pos):
     positions[0] = pos
     return Seam(positions, 'vertical')
 
+def horizontal_trans(img, seam):
+    if seam.dir == 'horizontal':
+        return np.swapaxes(img, 0, 1)
+    else:
+        return img
+
 def cut_by_seam(img, seam):
+    img = horizontal_trans(img, seam)
     positions = seam.get_one_coor()
     if len(img.shape) == 3:
         h, w, c = img.shape
@@ -162,7 +225,23 @@ def cut_by_seam(img, seam):
         pos = positions[i]
         new[i][0:pos] = img[i][0:pos]
         new[i][pos:w-1] = img[i][pos+1:w]
-    return new
+    return horizontal_trans(new, seam)
+
+def enlarge_image_by_seam(img, seam):
+    img = horizontal_trans(img, seam)
+    positions = seam.get_one_coor()
+    assert len(img.shape) == 3
+    h, w, c = img.shape
+    new = np.zeros((h, w+1, c), dtype=img[0][0][0].dtype)
+    
+    for i in range(h):
+        pos = positions[i]
+        new[i][0:pos+1] = img[i][0:pos+1]
+        new[i][pos+2:w+1] = img[i][pos+1:w]
+        for k in range(c):
+            new[i][pos+1][k] = (int(img[i][pos][k]) + int(img[i][pos+1][k])) // 2
+    return horizontal_trans(new, seam)
+
 
 def carve_vertical_once(img, energy, border = 1, forward = False, need_seam=False):
     #direction = "vertical" or "horizontal"
@@ -211,7 +290,6 @@ def carve(img, energy, direction, num = 1, border = 1, forward = False, need_sea
             energy = np.swapaxes(energy, 0, 1)
         else : 
             for i in range(3) :
-                print(energy[i].shape)
                 energy[i] = np.swapaxes(energy[i], 0, 1)
             #energy = np.swapaxes(energy, 1, 2)
     
@@ -232,36 +310,56 @@ def carve(img, energy, direction, num = 1, border = 1, forward = False, need_sea
     else:
         return img
 
-"""
-def first_k_seams(img, energy, direction, k=1, border = 1, forward = False):
-    if direction == "horizontal":
-        img = np.swapaxes(img, 0, 1)
-        if forward == False : 
-            energy = np.swapaxes(energy, 0, 1)
-        else : 
-            for i in range(3) : 
-                energy[i] = np.swapaxes(energy[i], 0, 1)
-      
-    if forward == False : 
-        value, dir = dp(energy, border)
-    else : 
-        value, dir = dp_forward(E_l = energy[0], E_u = energy[1], E_r = energy[2], border = border)
+def determine_directions(img, func, forward, out_r, out_c):
+    r, c = img.shape[0], img.shape[1]
+    dr = abs(r - out_r)
+    dc = abs(c - out_c)
+    dirs = ['vertical']*dc + ['horizontal']*dr
+    random.shuffle(dirs)
+    return dirs
 
-    h, w = img.shape[0], img.shape[1]
-    leftmost = border; rightmost = w-1-border
-    ps = [ (value[h-1][i], i) for i in range(leftmost, rightmost+1) ]
-    ps.sort(key = lambda p: p[0])
-    traces = [ backtrace(dir, h, ps[i][1]) for i in range(k) ]
+def resize(ori, func, forward, out_r, out_c, need_seam=False, dirs = None):
+    if dirs == None:
+        dirs = determine_directions(ori, func, forward, out_r, out_c)
 
-    if direction == "vertical":
-        seams = []
-        for trace in traces:
-            seam = [(i, trace[i]) for i in range(h)]
-            seams.append(seam)
+    # cut and get the seams
+    img = ori
+    carved_seams = []
+    len_dir = len(dirs)
+    for i in range(len_dir):
+        d = dirs[i]
+        em = func(img)
+        print("process {}/{}".format(i, len_dir))
+        img, tmp_seams = carve(img, em, d, num=1, border=1, forward=forward, need_seam=True)
+        carved_seams += tmp_seams
+    
+    get_op = lambda input, output: 'cut' if input>output else 'enlarge'
+    row_op = get_op(ori.shape[0], out_r)
+    col_op = get_op(ori.shape[1], out_c)
+    #if row_op == 'cut' and col_op == 'cut':
+    #    return img
+
+    # cut or enlarge by seams
+    img = ori
+    seams = transform_seams(carved_seams)
+    n = len(seams)
+
+    for i in range(n):
+        if seams[i].dir == 'vertical':
+            op = col_op
+        else:
+            op = row_op
+        if op=='cut':
+            img = cut_by_seam(img, seams[i])
+            for j in range(i+1, n):
+                seams[j] = seams[j].cut_by(seams[i])
+        else:
+            #print("enlarge", seams[i].dir)
+            img = enlarge_image_by_seam(img, seams[i])
+            for j in range(i+1, n):
+                seams[j] = seams[j].enlarge_by(seams[i])
+    if need_seam:
+        return img, seams
     else:
-        seams = []
-        for trace in traces:
-            seam = [(trace[i], i) for i in range(h)]
-            seams.append(seam)
-    return seams
-"""
+        return img
+

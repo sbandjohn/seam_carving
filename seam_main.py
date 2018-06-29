@@ -1,12 +1,13 @@
 from skimage import io
 from matplotlib import pyplot as plt
 import sys
-import random
 
 import sc
 import network_energy
 import forward_energy
 import part1_energy
+
+""" dolphin size: 239*200 c*r """
 
 image_dir = sys.argv[1]
 print(sys.argv)
@@ -29,21 +30,7 @@ def get_setting(type):
 
 setting = get_setting(energy_type)
 
-def determine_directions(img, out_r, out_c, setting):
-    r, c = img.shape[0], img.shape[1]
-    dr = abs(r - out_r)
-    dc = abs(c - out_c)
-    dirs = ['vertical']*dc + ['honrizontal']*dr
-    random.shuffle(dirs)
-    return dirs
-
-
-directions = determine_directions(img, out_r, out_c, setting)
-
-out = img
-for d in directions:
-    em = setting['func'](out)
-    out = sc.carve(out, em, d, num=1, border=1, forward=setting['forward'])
+out = sc.resize(img, setting['func'], setting['forward'], out_r, out_c)
 
 io.imsave(output_dir, out)
 
@@ -54,4 +41,4 @@ def show_res(img, out):
     plt.imshow(out)
     plt.show()
 
-show_res(img, out)
+#show_res(img, out)
