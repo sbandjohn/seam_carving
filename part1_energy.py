@@ -66,7 +66,7 @@ def combine(img, show=False):
     # combine minus entropy and RGB difference, ratio= 1:1
     mH = range_normalize(minus_entropy(img, show), 0, 1)
     RGB = range_normalize(RGBdifference(img, show), 0, 1)
-    res = mH + RGB
+    res = 0.5*mH + RGB
 
     if show:
         plt.figure()

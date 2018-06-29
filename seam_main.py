@@ -30,7 +30,7 @@ def get_setting(type):
 
 setting = get_setting(energy_type)
 
-out = sc.resize(img, setting['func'], setting['forward'], out_r, out_c)
+out = sc.resize_multi(img, setting['func'], setting['forward'], out_r, out_c)
 
 io.imsave(output_dir, out)
 
