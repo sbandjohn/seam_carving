@@ -8,9 +8,11 @@ import scharr_energy
 import forward_energy
 import part1_energy
 
-image_dir = "cat.jpg"
+image_dir = "dolphin.jpg"
 # sb: 500*375 c*r
 # cat: 360*263
+# cute cat: 500*330 c*r
+# timg: 325*186
 
 cuts = 20
 
@@ -28,7 +30,7 @@ def determine_directions(dr, dc):
     random.shuffle(dirs)
     return dirs
 
-def try_resize(ori, func, forward, cut_r, cut_c, name, func2, forward2, name2):
+def compare_resize(ori, func, forward, cut_r, cut_c, name, func2, forward2, name2):
     r, c = ori.shape[0], ori.shape[1]
     out_r = r + cut_r
     out_c = c + cut_c
@@ -65,22 +67,32 @@ def try_resize(ori, func, forward, cut_r, cut_c, name, func2, forward2, name2):
     #for seam in carved2:
     #    draw_seam(seam.coor)
 
-"""
-def compare_resize(ori, cut_r, cut_c):
+def try_resize(ori, func, forward, cut_r, cut_c, name):
     r, c = ori.shape[0], ori.shape[1]
     out_r = r + cut_r
     out_c = c + cut_c
-    img = ori
-    dirs = sc.determine_directions(img, func, forward, out_r, out_c)
 
-    img1 = 
-"""
+    img, carved_seams = sc.resize_once(ori, func, forward, out_r, out_c, need_seam=True)
+    seams = sc.transform_seams(carved_seams)
 
-#try_resize(img, part1_energy.RGBdifference, False, -15, -55, "cut:RGB")
+    plt.figure()
+    plt.subplot(121)
+    plt.title(name+' seams')
+    plt.imshow(ori)
+    for seam in seams:
+        draw_seam(seam.coor)
+    plt.subplot(122)
+    plt.title(name+" result")
+    plt.imshow(img)
+    plt.savefig(name)
+    #for seam in carved2:
+    #    draw_seam(seam.coor)
+
+try_resize(img, part1_energy.RGBdifference, False, -15, -55, "cut:RGB")
 #try_resize(img, part1_energy.combine, False, +10, +20, "enlarge:RGB+entropy")
 #try_resize(img, forward_energy.energy_map, True, -15, -55, "cut:forward")
-try_resize(img, part1_energy.combine, False, +60, -60, "RGB+entropy",
-                forward_energy.energy_map, True, "forward")
+#compare_resize(img, part1_energy.combine, False, -15, -55, "resize: RGB+entropy",
+#                forward_energy.energy_map, True, "resize: forward")
 
 #try_resize(img, part1_energy.combine, -40, 0, forward=False)
 #try_resize(img, network_energy.energy_map, -50, 0, forward=False)
