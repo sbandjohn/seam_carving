@@ -3,7 +3,6 @@ import numpy as np
 import torchvision.transforms as transforms
 from skimage import filters, color, io
 import matplotlib.pyplot as plt
-from numba import jit
 
 dxy = [(i-1, j-1) for j in range(3) for i in range(3) if (i, j)!=(1, 1)]
 
