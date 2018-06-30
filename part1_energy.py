@@ -88,9 +88,19 @@ def combine(img, show=False):
 
 def test():
     img = io.imread('dolphin.jpg')
-    H = combine(img, show=True)
+    RGB = range_normalize(RGBdifference(img),0, 1)
+    H = range_normalize(minus_entropy(img),0, 1)
+    plt.figure()
+    plt.subplot(121)
+    plt.title("RGB energy map")
+    plt.imshow(RGB)
+    plt.subplot(122)
+    plt.title("entropy energy map")
     plt.imshow(H)
     plt.show()
+    #H = combine(img, show=True)
+    #plt.imshow(H)
+    #plt.show()
 
 if __name__=="__main__":
     test()

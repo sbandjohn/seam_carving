@@ -123,9 +123,36 @@ def try_resize(ori, func, forward, cut_r, cut_c, name, filename):
 #compare_resize(img, part1_energy.combine, False, 0, 150, "RGB+entropy",
 #                    forward_conv_energy.energy_map, True, " forward", "3 150 RGB_entopy vs forward")
 
-compare_resize_3(img, part1_energy.combine, False, -50, 60, "RGB+entropy",
-                    network_energy.tail_map, False, "tail", 
-                    combined_energy.part1_tail, False, "combined", "cutecat -+ RGB tail combined")
+#compare_resize_3(img, part1_energy.combine, False, -50, 60, "RGB+entropy",
+#                    network_energy.tail_map, False, "tail", 
+#                    combined_energy.part1_tail, False, "combined", "cutecat -+ RGB tail combined")
+
+def test():
+    img = io.imread('dolphin.jpg')
+    RGB = part1_energy.RGBdifference(img)
+    H = part1_energy.minus_entropy(img)
+    RGBH = part1_energy.combine(img)
+    N = network_energy.energy_map(img)
+    plt.figure()
+    plt.subplot(221)
+    plt.title("RGB energy map")
+    plt.imshow(RGB)
+    plt.subplot(222)
+    plt.title("entropy energy map")
+    plt.imshow(H)
+    plt.subplot(223)
+    plt.title("RGBH energy map")
+    plt.imshow(RGBH)
+    plt.subplot(224)
+    plt.title("NETWORK energy map")
+    plt.imshow(N)
+    plt.savefig("energy_map_compare")
+    plt.show()
+    #H = combine(img, show=True)
+    #plt.imshow(H)
+    #plt.show()
+
+test()
 
 """
 plt.figure()

@@ -1,8 +1,2 @@
-python3 seam_main.py cutecat.jpg 260 333 1 cutecat_enlarge_combine.jpg
-python3 seam_main.py cutecat.jpg 260 333 2 cutecat_enlarge_forward.jpg
-python3 seam_main.py cutecat.jpg 260 333 3 cutecat_enlarge_network.jpg
-
-#python3 seam_main.py dolphin.jpg 190 170 3 dolphin_cut_network.jpg
-#python3 seam_main.py dolphin.jpg 190 170 0 dolphin_cut_RGB.jpg
-#python3 seam_main.py dolphin.jpg 190 170 1 dolphin_cut_combine.jpg
-#python3 seam_main.py dolphin.jpg 190 170 2 dolphin_cut_forward.jpg
+python3 seam_main.py smallcar.jpg 300  250 0 smallcar_resize_RGB.jpg
+python3 seam_main.py smallcar.jpg 300  250 0 smallcar_resize_RGB_opt.jpg opt
