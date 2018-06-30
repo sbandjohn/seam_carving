@@ -39,18 +39,6 @@ def energy_map(img):
         E_l += np.absolute(signal.convolve2d(aha[k], kernel_l2, boundary='symm', mode='same'))
         E_r += np.absolute(signal.convolve2d(aha[k], kernel_r1, boundary='symm', mode='same'))
         E_r += np.absolute(signal.convolve2d(aha[k], kernel_r2, boundary='symm', mode='same'))
-    """
-    E_u = signal.convolve2d(gray, kernel_u, boundary='symm', mode='same')
-    E_u = np.absolute(E_u)
-
-    E_l = signal.convolve2d(gray, kernel_l, boundary='symm', mode='same')
-    E_l = np.absolute(E_l)
-    E_l = E_l + E_u
-
-    E_r = signal.convolve2d(gray, kernel_r, boundary='symm', mode='same')
-    E_r = np.absolute(E_r)
-    E_r = E_r + E_u
-    """
 
     return np.array([E_l, E_u, E_r], dtype=np.float64)
 

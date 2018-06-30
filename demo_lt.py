@@ -9,7 +9,7 @@ import forward_energy
 import part1_energy
 import combined_energy
 
-image_dir = "cutecat.jpg"
+image_dir = "smallcar.jpg"
 # sb: 500*375 c*r
 # cat: 360*263
 # cute cat: 333*220 c*r
@@ -152,11 +152,11 @@ def test():
     #plt.imshow(H)
     #plt.show()
 
-test()
+#test()
 
-"""
+
 plt.figure()
 plt.title('Original Image')
 plt.imshow(img)
-"""
+plt.savefig('smallcar_origin')
 plt.show()

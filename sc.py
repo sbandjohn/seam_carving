@@ -1,7 +1,6 @@
 import numpy as np
 import random
 import math
-from numba import jit
 
 class Seam:
     def __init__(self, one_coor=None, dir=None):
@@ -147,7 +146,6 @@ def transform_seams(old_seams):
             seams[j] = seams[j].transform(seams[i])
     return seams
 
-#@jit
 def dp(E, border):
     h, w = E.shape
     leftmost = border
@@ -170,7 +168,7 @@ def dp(E, border):
             dir[i][j] = t - j
     return value, dir
 
-#@jit
+
 def dp_forward(E_l, E_u, E_r, border):
 
     h, w = E_l.shape
@@ -375,8 +373,8 @@ def random_directions(dr, dc):
     random.shuffle(dirs)
     return dirs
 
-min_size = 20
-max_step = 3
+min_size = 15
+max_step = 4
 
 def one_sequence(a, b, step_size):
     res = [a]
@@ -392,7 +390,7 @@ def one_sequence(a, b, step_size):
     return res
 
 def resize_sequence(r, c, out_r, out_c):
-    tot = abs(r-out_r) + abs(c-out_c)
+    tot = max(abs(r-out_r), abs(c-out_c))
     step_size = max(min_size, math.ceil(tot/max_step))
 
     rs = one_sequence(r, out_r, step_size)
@@ -451,7 +449,6 @@ def resize_once(ori, func, forward, out_r, out_c, need_seam=False, opt=False):
             for j in range(i+1, n):
                 seams[j] = seams[j].cut_by(seams[i])
         else:
-            #print("enlarge", seams[i].dir)
             img = enlarge_image_by_seam(img, seams[i])
             for j in range(i+1, n):
                 seams[j] = seams[j].enlarge_by(seams[i])
